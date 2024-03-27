@@ -1,7 +1,8 @@
 package poc;
 
-import java.io.*;
-
+import fr.opensagres.xdocreport.converter.ConverterTypeTo;
+import fr.opensagres.xdocreport.converter.ConverterTypeVia;
+import fr.opensagres.xdocreport.converter.Options;
 import fr.opensagres.xdocreport.core.XDocReportException;
 import fr.opensagres.xdocreport.document.IXDocReport;
 import fr.opensagres.xdocreport.document.registry.XDocReportRegistry;
@@ -9,15 +10,17 @@ import fr.opensagres.xdocreport.template.IContext;
 import fr.opensagres.xdocreport.template.TemplateEngineKind;
 import fr.opensagres.xdocreport.template.formatter.FieldsMetadata;
 
+import java.io.*;
+
 public class XDocReportPOC {
 
     public static void main(String[] args) throws XDocReportException, IOException {
 
         // 1) Load Docx file by filling Velocity template engine and cache
         // it to the registry
-        InputStream in = XDocReportPOC.class.getResourceAsStream("./test.docx");
+        InputStream in = XDocReportPOC.class.getResourceAsStream("/test.docx");
 
-        IXDocReport report = XDocReportRegistry.getRegistry().loadReport(in, TemplateEngineKind.Velocity);
+        IXDocReport report = XDocReportRegistry.getRegistry().loadReport(in, TemplateEngineKind.Freemarker);
 
         // 2) Create fields metadata to manage lazy loop (#forech velocity)
         // for table row.
@@ -32,8 +35,14 @@ public class XDocReportPOC {
         context.put("client", client);
 
         // 4) Generate report by merging Java model with the Docx
-        OutputStream out = new FileOutputStream(new File("project_out.docx"));
-        report.process(context, out);
+//        DOCX
+        OutputStream outDocx = new FileOutputStream(new File("project_out.docx"));
+        report.process(context, outDocx);
+
+//        PDF
+        OutputStream outPdf = new FileOutputStream(new File("project_out.pdf"));
+        Options options = Options.getTo(ConverterTypeTo.PDF).via(ConverterTypeVia.XWPF);
+        report.convert(context, options, outPdf);
     }
 
 }
